@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Band, Title, SubGenre
+from .models import Band, FollowBand, Review, Title, SubGenre
 
 
 class TitleAdmin(admin.ModelAdmin):
@@ -16,7 +16,7 @@ class TitleAdmin(admin.ModelAdmin):
         # Получаем строку с именами всех связанных band
         return ", ".join([band.name for band in obj.band.all()])
     get_bands_name.short_description = 'Музыкальная группа'
-    search_fields = ('name','year', 'band', 'subgenre')
+    search_fields = ('name', 'year', 'band', 'subgenre')
     list_filter = ('year', 'subgenre')
 
 
@@ -36,6 +36,24 @@ class BandAdmin(admin.ModelAdmin):
     list_filter = ('name',)
 
 
+class FollowBandAdmin(admin.ModelAdmin):
+    list_display = (
+        'user', 'following_band'
+    )
+    search_fields = ('user',)
+#    list_filter = ('user',)
+
+
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = (
+        'text', 'author', 'score', 'title'
+    )
+    search_fields = ('text', 'author')
+    list_filter = ('score',)
+
+
 admin.site.register(Title, TitleAdmin)
 admin.site.register(SubGenre, SubGenreAdmin)
 admin.site.register(Band, BandAdmin)
+admin.site.register(FollowBand, FollowBandAdmin)
+admin.site.register(Review, ReviewAdmin)

@@ -7,14 +7,14 @@ class TitleFilter(FilterSet):
     year = filters.NumberFilter(field_name="year")
     subgenre = filters.ModelMultipleChoiceFilter(
         queryset=SubGenre.objects.all(),
-        field_name="subgenre__name",
-        to_field_name="name"
+        field_name="subgenre__slug",
+        to_field_name="slug"
     )
     name = filters.CharFilter(lookup_expr="icontains")
     band = filters.ModelMultipleChoiceFilter(
         queryset=Band.objects.all(),
-        field_name="band__name",
-        to_field_name="name"
+        field_name="band__slug",
+        to_field_name="slug"
     )
 
     class Meta:

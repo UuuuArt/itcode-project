@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ info.title }}</title>
+</head>
+<body>
+    <header>
+        <h1>{{ info.title }}</h1>
+        <p>{{ info.description }}</p>
+    </header>
+
+    <section>
+        <h2>Популярные группы</h2>
+        <ul>
+            {% for band in popular_bands %}
+                <li>
+                    <h3>{{ band.name }}</h3>
+                    <img src="{{ band.image.url }}" alt="{{ band.name }}" />
+                    <p>{{ band.description }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section>
+        <h2>Последние рецензии</h2>
+        <ul>
+            {% for review in latest_reviews %}
+                <li>
+                    <h3>{{ review.title }}</h3>
+                    <p>{{ review.text }}</p>
+                    <small>Опубликовано: {{ review.pub_date }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section>
+        <h2>Последние произведения</h2>
+        <ul>
+            {% for title in latest_titles %}
+                <li>
+                    <h3>{{ title.name }} ({{ title.year }})</h3>
+                    <p>Средний рейтинг: {{ title.avg_score }}</p>
+                    <p>{{ title.text }}</p>
+                    <p>Жанры: {% for subgenre in title.subgenre %}{{ subgenre.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+                    <h4>Группы:</h4>
+                    <ul>
+                        {% for band in title.band %}
+                            <li>{{ band.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+    <section id="chat">
+        <h2>Чат</h2>
+        <div id="messages"></div>
+        <input type="text" id="message-input" placeholder="Напишите сообщение..." />
+        <button id="send-button">Отправить</button>
+    </section>
+
+    <script>
+        const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/'); // Сюда укажи правильный путь WebSocket
+
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const messagesDiv = document.getElementById('messages');
+
+        // Отправка сообщения
+        sendButton.addEventListener('click', () => {
+            const message = messageInput.value;
+            if (message) {
+                chatSocket.send(JSON.stringify({ 'message': message }));
+                messageInput.value = '';
+            }
+        });
+
+        // Получение сообщения
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const newMessage = document.createElement('div');
+            newMessage.textContent = data.message;
+            messagesDiv.appendChild(newMessage);
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+    </script>
+</body>
+</html>

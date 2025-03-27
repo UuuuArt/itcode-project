@@ -30,11 +30,14 @@ INSTALLED_APPS = [
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
     'users.apps.UsersConfig',
+    'chat.apps.ChatConfig',
     'rest_framework',
     'djoser',
     'rest_framework_simplejwt',
     'django_extensions',
     'django_filters',
+    'drf_spectacular',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -52,7 +55,7 @@ ROOT_URLCONF = 'rockrev.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates/'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -66,6 +69,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'rockrev.wsgi.application'
+ASGI_APPLICATION = 'rockrev.asgi.application'
 
 
 # Database
@@ -126,6 +130,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -135,3 +140,6 @@ SIMPLE_JWT = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+TG_API_TOKEN = "7585604178:AAF1VHKf8CyVwF0hVwCIW0B0VGiaY2SmexA"
+NEWS_API_KEY = 'b94eb7ddd32e4840b96c15506c8ec266'
