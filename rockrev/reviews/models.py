@@ -1,22 +1,78 @@
 from django.db import models
+from django.db.models import ForeignKey
+from django.utils.text import slugify
 
 from users.models import User
 
 
 class SubGenre(models.Model):
     name = models.CharField(
-        max_length=20,
-        verbose_name='Название поджанра'
+        max_length=40,
+        db_index=True,
+        verbose_name='Уникальное имя поджанра'
     )
     slug = models.SlugField(
-        max_length=20,
         unique=True,
-        verbose_name='Уникальное имя поджанра'
+        blank=True,
+        verbose_name='Слаг группы'
     )
 
     class Meta:
         verbose_name = 'Поджанр'
         verbose_name_plural = 'Поджанры'
+
+    def clean(self):
+        self.name = self.name.lower()
+        if not self.slug:
+            self.slug = slugify(self.name)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        if not self.pk:  # Только для новых объектов
+            self.name = self.name.lower()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+class Band(models.Model):
+    name = models.CharField(
+        max_length=70,
+        db_index=True,
+        verbose_name='Музыкальная группа'
+    )
+    slug = models.SlugField(
+        unique=True,
+        blank=True,
+        verbose_name='Слаг группы'
+    )
+    image = models.ImageField(
+        upload_to='band/images/',
+        blank=True,
+        null=True,
+        verbose_name='Изображение группы'
+    )
+    description = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name='Описание группы'
+    )
+
+    class Meta:
+        verbose_name = 'Группа'
+        verbose_name_plural = 'Группы'
+
+    def clean(self):
+        self.name = self.name.lower()
+        if not self.slug:
+            self.slug = slugify(self.name)
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        if not self.pk:  # Только для новых объектов
+            self.name = self.name.lower()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -27,17 +83,22 @@ class Title(models.Model):
         max_length=100,
         verbose_name='Название произведения'
     )
-    year = models.PositiveIntegerField(verbose_name="Год")
-    description = models.CharField(
+    year = models.PositiveIntegerField(verbose_name="Год выпуска")
+    text = models.CharField(
         max_length=550,
-        verbose_name='Описание',
+        verbose_name='Текст песни',
         null=True,
         blank=True
     )
     subgenre = models.ManyToManyField(
         SubGenre,
-        related_name='subgenre',
-        verbose_name='Поджанр'
+        related_name='subgenre_title',
+        verbose_name='Поджанр',
+    )
+    band = models.ManyToManyField(
+        Band,
+        related_name="band_title",
+        verbose_name='Музыкальная группа',
     )
 
     class Meta:
@@ -57,9 +118,9 @@ class Review(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='reviews'
+        related_name='user_reviews'
     )
-    score = models.IntegerField(
+    score = models.PositiveIntegerField(
         verbose_name='Оценка',
         null=True
     )
@@ -70,7 +131,7 @@ class Review(models.Model):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='reviews',
+        related_name='title_reviews',
         blank=True,
         null=True,
     )
@@ -95,7 +156,7 @@ class Comment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='comments'
+        related_name='user_comments'
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
@@ -104,7 +165,7 @@ class Comment(models.Model):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='comments',
+        related_name='review_comments',
         blank=True,
         null=True,
     )
@@ -116,3 +177,32 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class FollowBand(models.Model):
+    user = ForeignKey(
+        User,
+        related_name='follower',
+        verbose_name='Пользователь',
+        on_delete=models.CASCADE
+    )
+    following_band = models.ForeignKey(
+        Band,
+        on_delete=models.CASCADE,
+        related_name='band_follows',
+        verbose_name='Избранная группа'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'following_band'),
+                name='unique_follow'
+            )
+        ]
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранные'
+        ordering = ['-id']
+
+    def __str__(self):
+        return f'{self.user} -> {self.following_band}'
